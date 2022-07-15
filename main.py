@@ -1,13 +1,66 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
+import time
+from fastapi.middleware.cors import CORSMiddleware
+
+import psycopg2
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+connection = psycopg2.connect(user='postgres',
+                              password='...',
+                              host='localhost',
+                              port='5432',
+                              database='postgres')
+cursor = connection.cursor()
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+event = 'Stop'
+lastDate = 0
+lastDif = 0
+
+
+@app.get('/refresh_api')
+async def refresh_dif():
+    global lastDif
+    lastDif = 0
+    return {'success': True}
+
+
+@app.get('/record_timer')
+async def record_timer_and_event():
+    global event, lastDate, lastDif
+    if event == 'Start':
+        event = 'Stop'
+        lastDif += time.time() - lastDate
+    else:
+        event = 'Start'
+        if lastDate == 0:
+            lastDate = time.time()
+
+    lastDate = time.time()
+    cursor.execute('insert into events ("Timestamp") values (' + str(int(lastDate)) + ')')
+    connection.commit()
+    return {'event': event}
+
+
+@app.websocket('/ws')
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    global event, lastDif
+
+    while True:
+        await websocket.receive_text()
+        cur_date = time.strftime('%H:%M:%S')
+        await websocket.send_json({
+            'timestamp': cur_date,
+            'timer': lastDif,
+            'event': event
+        })

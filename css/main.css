@@ -1,0 +1,28 @@
+#button {
+  border-radius: 5px;
+  border: 1px solid black;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-bottom: 10px;
+}
+
+#table > .row:first-child, #table-orders > .row:first-child {
+  border-left: 1px solid rgb(197, 197, 197);
+  border-top: 1px solid rgb(197, 197, 197);
+  background-color: rgb(229, 229, 229);
+}
+
+#table > .row:first-child > .col {
+  border-right: 1px solid rgb(197, 197, 197);
+  border-bottom: 1px solid rgb(197, 197, 197);
+  font-weight: 700;
+}
+
+#table > .row:not(:first-child) {
+  border-left: 1px solid rgb(197, 197, 197);
+}
+
+#table > .row:not(:first-child) > .col {
+  border-right: 1px solid rgb(197, 197, 197);
+  border-bottom: 1px solid rgb(197, 197, 197);
+}
