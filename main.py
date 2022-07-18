@@ -25,6 +25,7 @@ cursor = connection.cursor()
 event = 'Stop'
 lastDate = 0
 lastDif = 0
+commonTimerValue = 0
 
 
 @app.get('/refresh_api')
@@ -54,13 +55,18 @@ async def record_timer_and_event():
 @app.websocket('/ws')
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    global event, lastDif
+    global event, lastDif, commonTimerValue
+
+    if event == 'Start':
+        commonTimerValue += .5
 
     while True:
         await websocket.receive_text()
         cur_date = time.strftime('%H:%M:%S')
+        commonTimerValue += .5
         await websocket.send_json({
             'timestamp': cur_date,
             'timer': lastDif,
-            'event': event
+            'event': event,
+            'time': commonTimerValue
         })

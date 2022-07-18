@@ -1,4 +1,4 @@
-fetch('http://127.0.0.1:8000/refresh_api')
+fetch('http://109.195.6.233/refresh_api')
 
 async function timerChange() {
   const but = document.getElementById('button')
@@ -7,14 +7,17 @@ async function timerChange() {
   } else {
     but.innerText = 'Старт'
   }
-  await fetch('http://127.0.0.1:8000/record_timer')
+  await fetch('http://109.195.6.233/record_timer')
 }
-
-let commonTimerValue = 0
 
 const map = {
   'Stop' : 'Стоп',
   'Start' : 'Старт'
+}
+
+const mapInverse = {
+  'Stop' : 'Старт',
+  'Start' : 'Стоп'
 }
 
 /**
@@ -35,12 +38,12 @@ function toTime(seconds) {
   return `${hh}:${mm}:${ss}`
 }
 
-let lastEvent = 'Стоп'
-const ws = new WebSocket('ws://127.0.0.1:8000/ws')
+let lastEvent
+const ws = new WebSocket('ws://109.195.6.233/ws')
 ws.onmessage = function(event) {
   const data = JSON.parse(event.data)
   const timerEvent = map[data.event]
-  if (lastEvent !== timerEvent) {
+  if (lastEvent && lastEvent !== timerEvent) {
     document.getElementById('table').innerHTML += `
       <div class="row ml-1">
         <div class="col">${data.timestamp}</div>
@@ -50,10 +53,13 @@ ws.onmessage = function(event) {
     `
     lastEvent = timerEvent
   }
-
-  if (document.getElementById('button').innerText === 'Стоп') {
-    commonTimerValue += .5
-    document.getElementById('timer').innerText = toTime(commonTimerValue)
+  const timerFrontObj = document.getElementById('timer')
+  timerFrontObj.innerText = toTime(data.time)
+  if (timerFrontObj.style.visibility === 'hidden') {
+    const btn = document.getElementById('button')
+    btn.innerText = mapInverse[data.event]
+    lastEvent = timerEvent
+    timerFrontObj.style.visibility = btn.style.visibility = document.getElementById('table').style.visibility = 'visible'
   }
 }
 setInterval(()=>{
